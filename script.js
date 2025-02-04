@@ -49,63 +49,99 @@ function determineOperator(displayValue, inputValue) {
   } else if (displayValue === "*" && inputValue === "*") {
     let resultOperator = "*";
     return resultOperator;
+  } else if (displayValue === "%" && inputValue === "+") {
+    let resultOperator = "+";
+    return resultOperator;
+  } else if (displayValue === "%" && inputValue === "-") {
+    let resultOperator = "-";
+    return resultOperator;
+  } else if (displayValue === "%" && inputValue === "*") {
+    let resultOperator = "*";
+    return resultOperator;
+  } else if (displayValue === "%" && inputValue === "/") {
+    let resultOperator = "/";
+    return resultOperator;
+  } else if (displayValue === "+" && inputValue === "%") {
+    let resultOperator = "%";
+    return resultOperator;
+  } else if (displayValue === "-" && inputValue === "%") {
+    let resultOperator = "-%"; //CASO ESPECIAL
+    return resultOperator;
+  } else if (displayValue === "*" && inputValue === "%") {
+    let resultOperator = "%";
+    return resultOperator;
+  } else if (displayValue === "/" && inputValue === "%") {
+    let resultOperator = "%";
+    return resultOperator;
+  } else if (displayValue === "%" && inputValue === "%") {
+    let resultOperator = "%";
+    return resultOperator;
   }
 }
 function isOperator(input) {
-  return input === "+" || input === "-" || input === "*" || input === "/";
+  return (
+    input === "+" ||
+    input === "-" ||
+    input === "*" ||
+    input === "/" ||
+    input === "%" ||
+    input === "+/-"
+  );
 }
 
 function operate(arr) {
   let result = 0; // Empezamos con 0, por defecto.
 
-  // Verificamos si el primer elemento es un operador
   if (isOperator(arr[0])) {
-    // Si el primer operador es '-', lo aplicamos al siguiente número
+    //Inicializo result dependiendo de si es un num u operator, y de que operator es.
     if (arr[0] === "-") {
-      result = -arr[1]; // Convertimos el siguiente número en negativo
+      arr[1] = -arr[1];
+      result = arr[1];
+      arr.splice(0, 1);
     } else if (arr[0] === "+") {
-      result = arr[1]; // Si el primer operador es +, usamos el siguiente número
-    } else if (arr[0] === "*" || arr[0] === "/") {
-      result = 0; // Si el primer operador es * o /, inicializamos el resultado a 0
+      result = arr[1];
+      arr.splice(0, 1);
+    } else if (arr[0] === "*" || arr[0] === "/" || arr[0] === "%") {
+      result = 0;
     }
   } else {
-    result = arr[0]; // Si el primer valor no es un operador, lo usamos directamente
+    result = arr[0];
   }
 
-  // Primero, resolvemos * y /
   for (let i = 1; i < arr.length; i++) {
-    let operator = arr[i]; // El operador (como * o /)
-    let nextValue = arr[i + 1]; // El siguiente valor numérico
+    let operator = arr[i];
+    let nextValue = arr[i + 1];
+    let previousValue = arr[i - 1];
 
-    // Verificamos si el operador es * o /
-    if (operator === "*" || operator === "/") {
-      // Realizamos la operación
+    if (operator === "*" || operator === "/" || operator === "%") {
       if (operator === "*") {
-        result *= nextValue; // Multiplicamos el resultado por el siguiente valor
+        result *= nextValue;
       } else if (operator === "/") {
-        result /= nextValue; // Dividimos el resultado por el siguiente valor
+        result /= nextValue;
+      } else {
+        result = previousValue / 100;
+        arr.splice(0, 1);
+        arr.splice(0, 1);
+        arr.unshift(result);
       }
-      i++; // Incrementamos el índice extra porque ya procesamos el siguiente número
+      i++;
     }
   }
 
-  // Ahora procesamos las sumas y restas (+ y -)
   for (let i = 1; i < arr.length; i++) {
-    let operator = arr[i]; // El operador (+ o -)
-    let nextValue = arr[i + 1]; // El siguiente valor numérico
+    let operator = arr[i];
+    let nextValue = arr[i + 1];
 
-    // Verificamos si el operador es + o -
     if (operator === "+") {
-      result += nextValue; // Sumamos el siguiente valor
+      result += nextValue;
     } else if (operator === "-") {
-      result -= nextValue; // Restamos el siguiente valor
+      result -= nextValue;
     }
-    i++; // Incrementamos el índice extra porque ya procesamos el siguiente número
+    i++;
   }
 
-  // Devolver el resultado final
   console.log(result);
-  return result;
+  return parseFloat(result.toFixed(11));
 }
 
 let buttons = document.querySelectorAll("button");
@@ -121,7 +157,8 @@ buttons.forEach((button) => {
       // If display IS EMPTY
 
       if (!isNaN(input)) {
-        // AND input is number
+        // If DISPLAY is EMPTY AND input is number
+
         arrOperation.push(parseInt(input));
         display.textContent = input;
       }
@@ -135,10 +172,13 @@ buttons.forEach((button) => {
           display.textContent = input;
         } else if (input === "=") {
           display.textContent = "0";
-          let result = operate(arrOperation); // NO VA DIRECTAMENTE CERO>? SI DISPLAY ESTA VACIO Y pongo un operador deberia ser 0
+          let result = operate(arrOperation);
           display.textContent = result;
           arrOperation = [result];
-          return;
+        } else if (input === "%") {
+          // VERIFICAR SI ESTO VA ACA
+          arrOperation = [];
+          display.textContent = "%";
         }
       }
     } else {
@@ -155,11 +195,18 @@ buttons.forEach((button) => {
           // SI HAY UN NUMERO EN LA PANTALLA Y EL INPUT NO ES NUMERO
           if (input === "AC") {
             arrOperation = [];
-            display.textContent = 0;
+            display.textContent = "0";
           } else if (isOperator(input)) {
             arrOperation.push(input);
             display.textContent = input;
+            console.log(arrOperation);
           } else if (input === "=") {
+            display.textContent = input;
+            let result = operate(arrOperation);
+            display.textContent = result;
+            arrOperation = [result];
+            return;
+          } else if (input === "%") {
             display.textContent = input;
             let result = operate(arrOperation);
             display.textContent = result;
@@ -177,7 +224,7 @@ buttons.forEach((button) => {
           //Si hay un NO NUMERO en la PANTALLA y el Input es NO NUMERO.
           if (input === "AC") {
             arrOperation = [];
-            display.textContent = 0;
+            display.textContent = "0";
           } else if (isOperator(input)) {
             let resultOperator = determineOperator(display.textContent, input);
 
@@ -192,8 +239,14 @@ buttons.forEach((button) => {
               let secondOperand = "/";
               arrOperation.push(auxOperand);
               arrOperation.push(secondOperand);
+            } else if (resultOperator === "-%") {
+              arrOperation = [];
+              display.textContent = "Error";
             } else {
+              arrOperation.pop();
               arrOperation.push(resultOperator);
+              console.log(resultOperator);
+              console.log(arrOperation);
             }
           } else if (input === "=") {
             display.textContent = input;
@@ -207,26 +260,3 @@ buttons.forEach((button) => {
     }
   });
 });
-
-//     //display.textContent = input;
-
-//     if (isNaN(parseInt(input))) {
-//       if (input === "=") {
-//         let cleanedArr = cleanInput(arrOperation);
-//         let result = calculate(cleanedArr);
-//         display.textContent = result;
-//       } else if (input === "AC") {
-//         arrOperation = [];
-//         display.textContent = 0;
-//       } else {
-//         arrOperation.push(input);
-//         display.textContent = input;
-//       } // agregar las teclas que faltan ( %% simbolo de negativad)
-//     } else {
-//       arrOperation.push(parseInt(input));
-//       display.textContent = input;
-//     }
-
-//     return arrOperation;
-//   });
-// });
